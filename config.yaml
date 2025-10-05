@@ -1,0 +1,47 @@
+# Multimodal RAG Configuration
+
+# Model configurations
+models:
+  # Text embedding model
+  text_embedding:
+    name: "all-MiniLM-L6-v2"
+    dim: 384
+  
+  # Image embedding model
+  image_embedding:
+    name: "clip"
+    dim: 512
+  
+  # Audio embedding model (Whisper for transcription)
+  audio_embedding:
+    name: "whisper-base"
+    dim: 512
+  
+  # LLM for generation
+  llm:
+    name: "microsoft/phi-3-mini-4k-instruct"
+    max_tokens: 2048
+
+# Vector database configuration
+vector_db:
+  type: "faiss"
+  index_path: "./data/index.faiss"
+  metadata_path: "./data/metadata.json"
+
+# File processing configurations
+processing:
+  chunk_size: 512
+  chunk_overlap: 50
+  image_size: [224, 224]  # For CLIP preprocessing
+
+# Paths
+paths:
+  data_dir: "./data"
+  temp_dir: "./temp"
+  input_dir: "./input"
+  output_dir: "./output"
+
+# Retrieval settings
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.7
