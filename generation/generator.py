@@ -14,16 +14,18 @@ class Generator:
     """Generator for LLM-based answer production."""
     
     def __init__(self, model_name: str = "microsoft/phi-3-mini-4k-instruct", 
-                 max_tokens: int = 2048):
+                 max_tokens: int = 2048, force_cpu: bool = True):
         """
         Initialize generator.
         
         Args:
             model_name: Name of the LLM to use
             max_tokens: Maximum tokens for generation
+            force_cpu: Whether to force CPU usage (default: True to avoid device-related errors)
         """
         self.model_name = model_name
         self.max_tokens = max_tokens
+        self.force_cpu = force_cpu
         self.model = None
         self.tokenizer = None
         self.device = None
@@ -36,44 +38,35 @@ class Generator:
     def _load_model(self):
         """Load the LLM and tokenizer."""
         try:
-            # Check if CUDA is available
-            cuda_available = torch.cuda.is_available()
+            # Check if CUDA is available (unless we're forcing CPU)
+            cuda_available = torch.cuda.is_available() and not self.force_cpu
             logger.info(f"CUDA available: {cuda_available}")
             
-            if cuda_available:
+            if cuda_available and not self.force_cpu:
                 # Get GPU info
                 gpu_count = torch.cuda.device_count()
                 gpu_name = torch.cuda.get_device_name(0) if gpu_count > 0 else "Unknown"
                 logger.info(f"GPU Count: {gpu_count}, Primary GPU: {gpu_name}")
                 
-            self.device = "cuda" if cuda_available else "cpu"
+            # Force CPU usage to avoid device-related errors
+            self.device = "cpu" if self.force_cpu else ("cuda" if cuda_available else "cpu")
+            logger.info(f"Using device: {self.device}")
+            
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             
             # Handle tokenizer padding token
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            # Try to load model with accelerate if available
-            try:
-                # Use device_map="auto" for better GPU utilization
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_name,
-                    device_map="auto",
-                    torch_dtype=torch.float16 if cuda_available else torch.float32,
-                    trust_remote_code=True,
-                    low_cpu_mem_usage=True
-                )
-                logger.info("Model loaded with device_map=auto")
-            except Exception as e:
-                logger.warning(f"Could not load model with device_map, trying without accelerate features: {str(e)}")
-                # Fallback to loading without device_map
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_name,
-                    torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-                    trust_remote_code=True,
-                    low_cpu_mem_usage=True
-                )
-                self.model = self.model.to(self.device)
+            # Load model with CPU device mapping to avoid device-related errors
+            logger.info(f"Loading model with device_map: {'cpu' if self.force_cpu else 'auto'}")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name,
+                device_map="cpu" if self.force_cpu else "auto",
+                torch_dtype=torch.float32 if self.force_cpu else (torch.float16 if cuda_available else torch.float32),
+                trust_remote_code=True,
+                low_cpu_mem_usage=True
+            )
             
             logger.info(f"Loaded LLM: {self.model_name} on {self.device}")
         except Exception as e:
@@ -106,7 +99,13 @@ class Generator:
             prompt = self._create_prompt(query, context_text)
             
             # Tokenize
-            inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048).to(self.model.device)
+            inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
+            
+            # For CPU, we need to make sure tensors are on the correct device
+            if self.force_cpu:
+                inputs = {k: v.to("cpu") for k, v in inputs.items()}
+            else:
+                inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
             
             # Generate with better parameters
             with torch.no_grad():

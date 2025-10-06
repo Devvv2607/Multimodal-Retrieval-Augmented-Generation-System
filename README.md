@@ -55,6 +55,30 @@ multimodal_rag/
 
 ## Deployment
 
+### Automated Deployment Scripts
+
+The project now includes several automated deployment scripts:
+
+- `deploy_app.py`: Python script for various deployment options
+- `deploy.sh`: Bash script for Unix-like systems
+- `deploy.bat`: Batch script for Windows systems
+- `DEPLOYMENT_GUIDE.md`: Comprehensive deployment guide
+
+To use the Python deployment script:
+```bash
+python deploy_app.py --local [--run]
+```
+
+To use the bash script (Unix/Linux/Mac):
+```bash
+./deploy.sh
+```
+
+To use the batch script (Windows):
+```bash
+deploy.bat
+```
+
 ### Streamlit Cloud Deployment
 
 To deploy on Streamlit Cloud:
@@ -63,6 +87,11 @@ To deploy on Streamlit Cloud:
 2. Create a new app on Streamlit Cloud
 3. Connect it to your forked repository
 4. Set the main file path to `streamlit_app.py`
+
+For detailed Streamlit Cloud deployment instructions, see:
+- [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) - Complete guide
+- [requirements_streamlit_cloud.txt](requirements_streamlit_cloud.txt) - Optimized requirements for Streamlit Cloud
+- [STREAMLIT_CLOUD_TROUBLESHOOTING.md](STREAMLIT_CLOUD_TROUBLESHOOTING.md) - Troubleshooting guide for deployment issues
 
 ### Handling Dependencies on Streamlit Cloud
 
@@ -77,6 +106,20 @@ Some dependencies may not install correctly on Streamlit Cloud due to system lim
 
 3. If Whisper is not available, audio processing will be disabled.
 
+### Docker Deployment
+
+To deploy using Docker:
+
+1. Build the Docker image:
+   ```bash
+   docker build -t multimodal-rag .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 8501:8501 multimodal-rag
+   ```
+
 ### Environment Variables
 
 Set the following environment variables if needed:
@@ -88,6 +131,7 @@ The project includes deployment helper scripts:
 
 - `setup_deploy.py`: Automated setup script for different deployment environments
 - `deploy.py`: Simplified deployment application with graceful degradation
+- `setup_streamlit.py`: Streamlit Cloud specific setup script
 - `test_minimal.py`: Minimal test to verify deployment setup
 
 To run the setup script:
@@ -99,6 +143,14 @@ For Streamlit Cloud deployment:
 ```bash
 python setup_deploy.py --streamlit-cloud
 ```
+
+## Troubleshooting
+
+If you encounter issues with deployment:
+
+1. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for general issues
+2. For Streamlit Cloud specific issues, see [STREAMLIT_CLOUD_TROUBLESHOOTING.md](STREAMLIT_CLOUD_TROUBLESHOOTING.md)
+3. Run the diagnostic script: `python comprehensive_diagnostic.py`
 
 ## Usage
 

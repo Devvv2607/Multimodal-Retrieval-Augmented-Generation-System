@@ -1,22 +1,21 @@
 """
-Streamlit application for the Multimodal RAG System.
-Optimized for Streamlit Cloud deployment with better error handling.
+Text-only Streamlit application for the RAG System.
+This is a simplified version that only handles text documents.
 """
 
 import streamlit as st
 import os
 import sys
 import tempfile
-import pandas as pd
 from typing import List, Dict, Any
 import logging
+
+# Add the current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Add the current directory to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import our RAG system components with error handling
 try:
@@ -26,31 +25,11 @@ try:
     from indexing.vector_store import VectorStore
     from embedding.text_embedder import TextEmbedder
     IMPORTS_AVAILABLE = True
-    logger.info("Core imports successful")
 except ImportError as e:
     logger.error(f"Import error: {str(e)}")
     IMPORTS_AVAILABLE = False
 
-# Only import embedders if available
-if IMPORTS_AVAILABLE:
-    try:
-        from embedding.image_embedder import ImageEmbedder
-    except ImportError:
-        ImageEmbedder = None
-        logger.warning("ImageEmbedder not available")
-    
-    try:
-        from embedding.audio_embedder import AudioEmbedder
-    except ImportError:
-        AudioEmbedder = None
-        logger.warning("AudioEmbedder not available")
-
-try:
-    from utils.config import config
-    CONFIG_AVAILABLE = True
-except ImportError as e:
-    logger.error(f"Config import error: {str(e)}")
-    CONFIG_AVAILABLE = False
+from utils.config import config
 
 # Initialize session state
 if 'initialized' not in st.session_state:
@@ -72,17 +51,13 @@ def log_diagnostic(message):
     logger.info(message)
 
 def initialize_system():
-    """Initialize the RAG system components."""
+    """Initialize the RAG system components for text-only processing."""
     if not IMPORTS_AVAILABLE:
         st.error("Required dependencies are not available. Please check the installation.")
         return False
         
-    if not CONFIG_AVAILABLE:
-        st.error("Configuration not available. Please check the config.yaml file.")
-        return False
-        
     try:
-        log_diagnostic("Initializing system components...")
+        log_diagnostic("Initializing text-only system components...")
         
         # Initialize components
         st.session_state.vector_store = VectorStore(
@@ -95,24 +70,13 @@ def initialize_system():
         text_embedder = TextEmbedder(config.get('models.text_embedding.name'))
         log_diagnostic("Text embedder initialized")
         
-        # Initialize image embedder if available
-        image_embedder = None
-        if ImageEmbedder:
-            try:
-                image_embedder = ImageEmbedder(config.get('models.image_embedding.name'))
-                log_diagnostic("Image embedder initialized")
-            except Exception as e:
-                image_embedder = None
-                log_diagnostic(f"Image embedder initialization failed: {str(e)}")
-        else:
-            log_diagnostic("Image embedder not available")
-        
+        # Initialize retriever with only text embedder (no image embedder)
         st.session_state.retriever = Retriever(
             st.session_state.vector_store, 
             text_embedder, 
-            image_embedder
+            None  # No image embedder for text-only version
         )
-        log_diagnostic("Retriever initialized")
+        log_diagnostic("Retriever initialized (text-only)")
         
         st.session_state.generator = Generator(
             model_name=config.get('models.llm.name'),
@@ -120,16 +84,10 @@ def initialize_system():
             force_cpu=True  # Force CPU to avoid device-related errors
         )
         
-        # Log GPU status
+        # Log device status
         if hasattr(st.session_state.generator, 'device'):
             log_diagnostic(f"Model loaded on device: {st.session_state.generator.device}")
-            if 'cuda' in str(st.session_state.generator.device):
-                try:
-                    import torch
-                    gpu_name = torch.cuda.get_device_name(0)
-                    log_diagnostic(f"Using GPU: {gpu_name}")
-                except Exception as gpu_error:
-                    log_diagnostic(f"GPU info error: {str(gpu_error)}")
+        
         log_diagnostic("Generator initialized")
         
         if st.session_state.generator.model is not None:
@@ -138,70 +96,61 @@ def initialize_system():
             log_diagnostic("LLM model not loaded - using fallback mode")
         
         st.session_state.initialized = True
-        log_diagnostic("System initialization complete")
+        log_diagnostic("Text-only system initialization complete")
         return True
     except Exception as e:
         error_msg = f"Error initializing system: {str(e)}"
         log_diagnostic(error_msg)
         st.error(error_msg)
-        logger.error(error_msg, exc_info=True)
         return False
 
 def main():
-    """Main Streamlit application."""
+    """Main Streamlit application for text-only version."""
     st.set_page_config(
-        page_title="Multimodal RAG System",
-        page_icon="🔍",
+        page_title="Text-only RAG System",
+        page_icon="📄",
         layout="wide"
     )
     
-    st.title("🔍 Multimodal Retrieval-Augmented Generation System")
+    st.title("📄 Text-only Retrieval-Augmented Generation System")
     st.markdown("""
-    This system can process documents, images, and audio files to provide intelligent search 
-    and question answering capabilities. Upload your files and ask questions!
-    
-    _Optimized for Streamlit Cloud deployment_
+    This system processes text documents to provide intelligent search and question answering capabilities.
+    Upload your text files and ask questions!
     """)
     
     # Show warning if imports are not available
     if not IMPORTS_AVAILABLE:
         st.warning("Some dependencies are not available. The system may have limited functionality.")
         st.info("Please check that all required packages are installed correctly.")
-        st.info("For Streamlit Cloud deployment, make sure your requirements file includes all necessary packages.")
-        return
-    
-    if not CONFIG_AVAILABLE:
-        st.error("Configuration file not available. Please check that config.yaml exists in the root directory.")
         return
     
     # Initialize system if not already done
     if 'initialized' not in st.session_state or not st.session_state.initialized:
         with st.spinner("Initializing system..."):
             if not initialize_system():
-                st.error("Failed to initialize the system. Please check the logs and configuration.")
-                st.info("For Streamlit Cloud deployment, check the build logs for specific error messages.")
+                st.error("Failed to initialize the system. Please check the logs.")
                 return
     
     # Create tabs for different functionalities
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📁 Ingest", "💬 Chat", "📊 Status", "🔧 Diagnostics", "ℹ️ About"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📁 Text Ingest", "💬 Chat", "📊 Status", "ℹ️ About"])
     
     with tab1:
-        st.header("Document Ingestion")
-        st.markdown("Upload documents to be processed and indexed by the system.")
+        st.header("Text Document Ingestion")
+        st.markdown("Upload text documents to be processed and indexed by the system.")
         
         uploaded_files = st.file_uploader(
-            "Choose files to ingest",
+            "Choose text files to ingest",
             accept_multiple_files=True,
-            type=["txt", "docx", "pdf", "png", "jpg", "jpeg", "mp3", "wav"]
+            type=["txt", "docx", "pdf"]
         )
         
         if uploaded_files:
             st.info(f"Selected {len(uploaded_files)} files for ingestion.")
             
-            if st.button("Process Files"):
+            if st.button("Process Text Files"):
                 with st.spinner("Processing files..."):
                     try:
-                        log_diagnostic(f"Processing {len(uploaded_files)} files")
+                        log_diagnostic(f"Processing {len(uploaded_files)} text files")
                         
                         # Create temporary directory for uploaded files
                         with tempfile.TemporaryDirectory() as temp_dir:
@@ -243,18 +192,16 @@ def main():
                         st.error(error_msg)
                         log_diagnostic(error_msg)
         
-        st.markdown("### Supported File Types")
+        st.markdown("### Supported Text File Types")
         st.markdown("""
-        - **Text Documents**: .txt
+        - **Plain Text**: .txt
         - **Word Documents**: .docx
         - **PDF Documents**: .pdf
-        - **Images**: .png, .jpg, .jpeg
-        - **Audio**: .mp3, .wav
         """)
     
     with tab2:
         st.header("Chat Interface")
-        st.markdown("Ask questions about your indexed content.")
+        st.markdown("Ask questions about your indexed text content.")
         
         # Add custom CSS to fix the chat input at the bottom
         st.markdown("""
@@ -319,7 +266,7 @@ def main():
                 try:
                     log_diagnostic("Starting retrieval process")
                     
-                    # Retrieve context
+                    # Retrieve context (text-only)
                     context = st.session_state.retriever.retrieve_text(prompt, k=5)
                     log_diagnostic(f"Retrieved {len(context)} results")
                     
@@ -327,12 +274,16 @@ def main():
                     
                     response_content = ""
                     if context:
+                        # Filter context to only include text items
+                        text_context = [item for item in context if item.get('type') == 'text']
+                        log_diagnostic(f"Filtered to {len(text_context)} text items")
+                        
                         # Generate answer
                         answer_displayed = False
-                        if st.session_state.generator.model is not None:
+                        if st.session_state.generator.model is not None and text_context:
                             log_diagnostic("Generating answer with LLM")
                             try:
-                                answer = st.session_state.generator.generate_answer(prompt, context)
+                                answer = st.session_state.generator.generate_answer(prompt, text_context)
                                 status_placeholder.empty()
                                 st.markdown(answer)
                                 answer_displayed = True
@@ -345,41 +296,29 @@ def main():
                                 st.error(f"Error generating answer: {str(gen_error)}")
                                 response_content = f"Error generating answer: {str(gen_error)}"
                         else:
-                            # Fallback when LLM is not available
+                            # Fallback when LLM is not available or no text context
                             status_placeholder.empty()
-                            st.markdown("**Note:** The LLM model is not available. Here's the relevant context I found:")
-                            response_content = "**Note:** The LLM model is not available. Here's the relevant context I found:\n\n"
-                            for i, item in enumerate(context, 1):
-                                source = os.path.basename(item.get('source', 'Unknown'))
-                                item_type = item.get('type', 'unknown')
-                                
-                                if item_type == 'text':
+                            if text_context:
+                                st.markdown("**Note:** The LLM model is not available. Here's the relevant context I found:")
+                                response_content = "**Note:** The LLM model is not available. Here's the relevant context I found:\n\n"
+                                for i, item in enumerate(text_context, 1):
+                                    source = os.path.basename(item.get('source', 'Unknown'))
                                     text = item.get('text', '')[:200] + "..." if len(item.get('text', '')) > 200 else item.get('text', '')
                                     st.markdown(f"**{i}.** {text} \n\n*Source: {source}*")
                                     response_content += f"**{i}.** {text} \n\n*Source: {source}*\n\n"
-                                elif item_type == 'image':
-                                    st.markdown(f"**{i}.** Image: {source}")
-                                    response_content += f"**{i}.** Image: {source}\n\n"
-                                elif item_type == 'audio':
-                                    st.markdown(f"**{i}.** Audio: {source}")
-                                    response_content += f"**{i}.** Audio: {source}\n\n"
+                            else:
+                                st.markdown("I couldn't find any relevant text information to answer your question.")
+                                response_content = "I couldn't find any relevant text information to answer your question."
                             answer_displayed = True
                             log_diagnostic("Showing fallback context")
                         
-                        # Always display sources if we have context
-                        if context:
+                        # Always display sources if we have text context
+                        if text_context:
                             with st.expander("📚 Sources", expanded=False):
-                                for i, item in enumerate(context, 1):
+                                for i, item in enumerate(text_context, 1):
                                     source = os.path.basename(item.get('source', 'Unknown'))
-                                    item_type = item.get('type', 'unknown')
-                                    
-                                    if item_type == 'text':
-                                        text = item.get('text', '')[:100] + "..." if len(item.get('text', '')) > 100 else item.get('text', '')
-                                        st.markdown(f"**{i}.** {text} \n\n*Source: {source}*")
-                                    elif item_type == 'image':
-                                        st.markdown(f"**{i}.** Image: {source}")
-                                    elif item_type == 'audio':
-                                        st.markdown(f"**{i}.** Audio: {source}")
+                                    text = item.get('text', '')[:100] + "..." if len(item.get('text', '')) > 100 else item.get('text', '')
+                                    st.markdown(f"**{i}.** {text} \n\n*Source: {source}*")
                         
                         # If no answer was displayed for some reason, show a message
                         if not answer_displayed:
@@ -418,10 +357,6 @@ def main():
             # Show models
             st.subheader("Models")
             st.text(f"Text Embedding: {config.get('models.text_embedding.name')}")
-            if ImageEmbedder:
-                st.text(f"Image Embedding: {config.get('models.image_embedding.name')}")
-            else:
-                st.text("Image Embedding: Not available")
             st.text(f"LLM: {config.get('models.llm.name')}")
             
             # Show LLM status
@@ -439,18 +374,16 @@ def main():
                     with open(config.get('vector_db.metadata_path'), 'r') as f:
                         metadata = json.load(f)
                     
-                    # Create a summary
-                    content_types = {}
+                    # Create a summary (text-only)
+                    text_count = sum(1 for item in metadata if item.get('type') == 'text')
                     sources = set()
                     for item in metadata:
-                        item_type = item.get('type', 'unknown')
-                        content_types[item_type] = content_types.get(item_type, 0) + 1
-                        sources.add(os.path.basename(item.get('source', 'Unknown')))
+                        if item.get('type') == 'text':
+                            sources.add(os.path.basename(item.get('source', 'Unknown')))
                     
                     # Display summary
                     st.markdown("#### Content Summary")
-                    for content_type, count in content_types.items():
-                        st.text(f"{content_type.capitalize()}: {count} items")
+                    st.text(f"Text Documents: {text_count} items")
                     
                     st.markdown("#### Indexed Sources")
                     for source in list(sources)[:10]:  # Show first 10 sources
@@ -465,34 +398,18 @@ def main():
             st.warning("System not initialized")
     
     with tab4:
-        st.header("Diagnostics")
-        st.markdown("System diagnostic information:")
-        
-        if 'diagnostics' in st.session_state and st.session_state.diagnostics:
-            for i, diagnostic in enumerate(st.session_state.diagnostics[-50:]):  # Show last 50 diagnostics
-                st.text(f"{i+1}. {diagnostic}")
-        else:
-            st.info("No diagnostic information available yet.")
-        
-        if st.button("Clear Diagnostics"):
-            st.session_state.diagnostics = []
-            st.rerun()
-    
-    with tab5:
         st.header("About This System")
         st.markdown("""
-        ### Multimodal RAG System
+        ### Text-only RAG System
         
-        This is an offline Retrieval-Augmented Generation system that can process multiple types of content:
+        This is a simplified version of the Retrieval-Augmented Generation system that only processes text documents:
         
         - **Text Documents** (TXT, DOCX, PDF)
-        - **Images** (PNG, JPG, JPEG)
-        - **Audio** (MP3, WAV)
         
         ### Key Features
         
-        1. **Multimodal Processing**: Handles different types of input files
-        2. **Semantic Search**: Uses embeddings for intelligent retrieval
+        1. **Text Processing**: Handles text document ingestion and indexing
+        2. **Semantic Search**: Uses embeddings for intelligent retrieval of text content
         3. **Local LLM**: Uses Microsoft's Phi-3 Mini for answer generation
         4. **Offline Operation**: No internet required after initial setup
         5. **Citation Support**: Provides sources for all retrieved information
@@ -500,22 +417,20 @@ def main():
         ### Technology Stack
         
         - **Text Embedding**: sentence-transformers
-        - **Image Embedding**: OpenAI CLIP
-        - **Audio Processing**: OpenAI Whisper
         - **Vector Database**: FAISS
         - **LLM**: Microsoft Phi-3 Mini
         - **Framework**: Streamlit
         
         ### How It Works
         
-        1. **Ingest**: Documents are processed and converted to embeddings
+        1. **Ingest**: Text documents are processed and converted to embeddings
         2. **Index**: Embeddings are stored in a vector database
-        3. **Retrieve**: Queries find similar embeddings in the database
-        4. **Generate**: An LLM generates answers based on retrieved context
+        3. **Retrieve**: Queries find similar text embeddings in the database
+        4. **Generate**: An LLM generates answers based on retrieved text context
         
         ### Usage Tips
         
-        - Upload documents in the **Ingest** tab
+        - Upload text documents in the **Text Ingest** tab
         - Ask questions in the **Chat** tab
         - Check system status in the **Status** tab
         """)
@@ -529,13 +444,6 @@ def main():
             st.success("✅ LLM Model: Loaded successfully")
             if hasattr(st.session_state.generator, 'device'):
                 st.text(f"Device: {st.session_state.generator.device}")
-                if 'cuda' in str(st.session_state.generator.device):
-                    try:
-                        import torch
-                        gpu_name = torch.cuda.get_device_name(0)
-                        st.text(f"GPU: {gpu_name}")
-                    except:
-                        pass
         else:
             st.warning("⚠️ LLM Model: Not available (using fallback mode)")
 
