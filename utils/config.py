@@ -11,7 +11,15 @@ class Config:
     
     def __init__(self, config_path: str = "config.yaml"):
         """Initialize configuration from YAML file."""
-        self.config_path = config_path
+        # Resolve the config path relative to this module's directory
+        if not os.path.isabs(config_path):
+            # Get the directory of this config.py file
+            config_dir = os.path.dirname(os.path.abspath(__file__))
+            # Go up one level to the multimodal_rag directory
+            project_dir = os.path.dirname(config_dir)
+            self.config_path = os.path.join(project_dir, config_path)
+        else:
+            self.config_path = config_path
         self.config = self._load_config()
     
     def _load_config(self) -> Dict[str, Any]:

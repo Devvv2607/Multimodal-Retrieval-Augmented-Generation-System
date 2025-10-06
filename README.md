@@ -32,13 +32,15 @@ multimodal_rag/
 
 1. Create a virtual environment:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   python -m venv rag_env
+   source rag_env/bin/activate  # On Windows: rag_env\Scripts\activate
    ```
 
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
+   pip install git+https://github.com/openai/CLIP.git
+   pip install streamlit
    ```
 
 3. Initialize the system:
@@ -53,6 +55,7 @@ multimodal_rag/
 
 ## Usage
 
+### Command Line Interface
 1. Process documents:
    ```bash
    python main.py ingest --input_dir /path/to/documents
@@ -62,6 +65,24 @@ multimodal_rag/
    ```bash
    python main.py query --question "Your question here"
    ```
+
+### Graphical User Interface
+Launch the Tkinter GUI:
+```bash
+python main.py --gui
+```
+
+### Web Interface (Streamlit)
+Launch the Streamlit web app:
+```bash
+streamlit run streamlit_app.py
+```
+
+Or use the provided scripts:
+- On Windows: `run_streamlit.bat`
+- On Unix-like systems: `run_streamlit.sh`
+
+The app will be available at: http://localhost:8501
 
 ## System Components
 
