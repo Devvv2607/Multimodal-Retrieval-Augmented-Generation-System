@@ -4,9 +4,19 @@ Audio embedder for transcribing audio and generating embeddings.
 
 import logging
 from typing import List, Dict, Any
-import whisper
-import torch
-import numpy as np
+
+# Try to import Whisper, but handle the case where it's not available
+try:
+    import whisper
+    WHISPER_AVAILABLE = True
+except ImportError:
+    WHISPER_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("Whisper library not available. Audio processing functionality will be disabled.")
+
+if WHISPER_AVAILABLE:
+    import torch
+    import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +33,18 @@ class AudioEmbedder:
         self.model_name = model_name
         self.model = None
         self.device = None
-        self._load_model()
+        
+        if WHISPER_AVAILABLE:
+            self._load_model()
+        else:
+            logger.warning("Whisper not available. Audio embedder initialized in fallback mode.")
     
     def _load_model(self):
         """Load the Whisper model."""
         try:
+            if not WHISPER_AVAILABLE:
+                raise ImportError("Whisper library not available")
+                
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             # Use available models
             available_models = whisper.available_models()
@@ -39,7 +56,8 @@ class AudioEmbedder:
             logger.info(f"Loaded Whisper audio model: {self.model_name} on {self.device}")
         except Exception as e:
             logger.error(f"Error loading Whisper audio model {self.model_name}: {str(e)}")
-            raise
+            # Don't raise the exception, just work in fallback mode
+            self.model = None
     
     def transcribe_audio(self, audio_path: str) -> Dict[str, Any]:
         """
@@ -51,6 +69,11 @@ class AudioEmbedder:
         Returns:
             Dictionary containing transcription and segments
         """
+        # Return empty result if Whisper is not available or model failed to load
+        if not WHISPER_AVAILABLE or self.model is None:
+            logger.warning("Whisper not available or model not loaded. Returning empty transcription.")
+            return {}
+        
         try:
             # Transcribe audio
             result = self.model.transcribe(audio_path)
@@ -72,6 +95,10 @@ class AudioEmbedder:
         Returns:
             Embedding vector
         """
+        # Return empty embedding if text is empty
+        if not text:
+            return []
+            
         try:
             embedding = text_embedder.embed_text(text)
             return embedding

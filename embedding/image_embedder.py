@@ -5,9 +5,19 @@ Image embedder for generating embeddings from images using CLIP.
 import logging
 from typing import List, Dict, Any
 import torch
-import clip
-from PIL import Image
 import numpy as np
+
+# Try to import CLIP, but handle the case where it's not available
+try:
+    import clip
+    CLIP_AVAILABLE = True
+except ImportError:
+    CLIP_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("CLIP library not available. Image embedding functionality will be disabled.")
+
+if CLIP_AVAILABLE:
+    from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +35,18 @@ class ImageEmbedder:
         self.model = None
         self.preprocess = None
         self.device = None
-        self._load_model()
+        
+        if CLIP_AVAILABLE:
+            self._load_model()
+        else:
+            logger.warning("CLIP not available. Image embedder initialized in fallback mode.")
     
     def _load_model(self):
         """Load the CLIP model."""
         try:
+            if not CLIP_AVAILABLE:
+                raise ImportError("CLIP library not available")
+                
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             # Use an available model
             available_models = clip.available_models()
@@ -41,7 +58,9 @@ class ImageEmbedder:
             logger.info(f"Loaded CLIP image embedding model: {self.model_name} on {self.device}")
         except Exception as e:
             logger.error(f"Error loading CLIP image embedding model {self.model_name}: {str(e)}")
-            raise
+            # Don't raise the exception, just work in fallback mode
+            self.model = None
+            self.preprocess = None
     
     def embed_images(self, image_paths: List[str]) -> List[List[float]]:
         """
@@ -53,6 +72,11 @@ class ImageEmbedder:
         Returns:
             List of embeddings (one for each image)
         """
+        # Return empty embeddings if CLIP is not available or model failed to load
+        if not CLIP_AVAILABLE or self.model is None or self.preprocess is None:
+            logger.warning("CLIP not available or model not loaded. Returning empty embeddings.")
+            return [[] for _ in image_paths]
+        
         try:
             images = []
             for path in image_paths:
@@ -73,7 +97,8 @@ class ImageEmbedder:
             return embeddings.tolist()
         except Exception as e:
             logger.error(f"Error generating image embeddings: {str(e)}")
-            return []
+            # Return empty embeddings as fallback
+            return [[] for _ in image_paths]
     
     def embed_image(self, image_path: str) -> List[float]:
         """
@@ -85,4 +110,10 @@ class ImageEmbedder:
         Returns:
             Embedding vector
         """
-        return self.embed_images([image_path])[0]
+        # Return empty embedding if CLIP is not available or model failed to load
+        if not CLIP_AVAILABLE or self.model is None or self.preprocess is None:
+            logger.warning("CLIP not available or model not loaded. Returning empty embedding.")
+            return []
+        
+        embeddings = self.embed_images([image_path])
+        return embeddings[0] if embeddings else []

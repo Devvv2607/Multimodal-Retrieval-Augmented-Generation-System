@@ -168,6 +168,11 @@ class Ingestor:
             # Generate embedding
             embedding = self.image_embedder.embed_image(file_path)
             
+            # If embedding is empty (due to CLIP not being available), skip adding to vector store
+            if not embedding:
+                logger.warning(f"Skipping image {file_path} due to unavailable CLIP model")
+                return False
+            
             # Add to vector store
             self.vector_store.add_vectors([embedding], metadata)
             
@@ -198,16 +203,15 @@ class Ingestor:
             transcript = transcription_result.get('text', '')
             
             if not transcript:
-                # Add metadata only if no transcript
-                self.vector_store.add_vectors([[0.0] * config.get('models.text_embedding.dim', 384)], metadata)
-                return True
+                return False
             
-            # Generate embedding for transcript
+            # Generate embedding for transcription
             embedding = self.audio_embedder.embed_audio_text(transcript, self.text_embedder)
             
-            # Update metadata with transcription info
-            metadata[0]['transcript'] = transcript
-            metadata[0]['segments'] = transcription_result.get('segments', [])
+            # If embedding is empty (due to Whisper not being available), skip adding to vector store
+            if not embedding:
+                logger.warning(f"Skipping audio {file_path} due to unavailable Whisper model")
+                return False
             
             # Add to vector store
             self.vector_store.add_vectors([embedding], metadata)
@@ -228,8 +232,8 @@ class Ingestor:
             True if processed successfully
         """
         try:
-            # Extract text chunks
-            chunks = self.text_processor.process_text(file_path)
+            # Process text
+            chunks = self.text_processor.process_text_file(file_path)
             
             if not chunks:
                 return False

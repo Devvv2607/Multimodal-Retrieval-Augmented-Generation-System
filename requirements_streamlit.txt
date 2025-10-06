@@ -1,24 +1,15 @@
-# Core dependencies
+# Streamlit Cloud compatible requirements
 transformers>=4.35.0
 torch>=2.0.0
 sentence-transformers>=2.2.0
 faiss-cpu>=1.7.0
 numpy>=1.21.0
 pillow>=9.0.0
-
-# Document processing
 python-docx>=0.8.11
 pypdf2>=3.0.0
-
-# Audio processing
 openai-whisper>=20231106
-
-# Image processing
 ftfy
 regex
-tqdm
-git+https://github.com/openai/CLIP.git
-
-# Utilities
 tqdm>=4.65.0
 pyyaml>=6.0
+# Note: CLIP needs to be installed separately or via git in deployment

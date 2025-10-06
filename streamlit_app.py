@@ -17,13 +17,32 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Import our RAG system components
-from ingestion.ingestor import Ingestor
-from retrieval.retriever import Retriever
-from generation.generator import Generator
-from indexing.vector_store import VectorStore
-from embedding.text_embedder import TextEmbedder
-from embedding.image_embedder import ImageEmbedder
+# Import our RAG system components with error handling
+try:
+    from ingestion.ingestor import Ingestor
+    from retrieval.retriever import Retriever
+    from generation.generator import Generator
+    from indexing.vector_store import VectorStore
+    from embedding.text_embedder import TextEmbedder
+    IMPORTS_AVAILABLE = True
+except ImportError as e:
+    logger.error(f"Import error: {str(e)}")
+    IMPORTS_AVAILABLE = False
+
+# Only import embedders if available
+if IMPORTS_AVAILABLE:
+    try:
+        from embedding.image_embedder import ImageEmbedder
+    except ImportError:
+        ImageEmbedder = None
+        logger.warning("ImageEmbedder not available")
+    
+    try:
+        from embedding.audio_embedder import AudioEmbedder
+    except ImportError:
+        AudioEmbedder = None
+        logger.warning("AudioEmbedder not available")
+
 from utils.config import config
 
 # Initialize session state
@@ -47,6 +66,10 @@ def log_diagnostic(message):
 
 def initialize_system():
     """Initialize the RAG system components."""
+    if not IMPORTS_AVAILABLE:
+        st.error("Required dependencies are not available. Please check the installation.")
+        return False
+        
     try:
         log_diagnostic("Initializing system components...")
         
@@ -61,8 +84,13 @@ def initialize_system():
         text_embedder = TextEmbedder(config.get('models.text_embedding.name'))
         log_diagnostic("Text embedder initialized")
         
-        image_embedder = ImageEmbedder(config.get('models.image_embedding.name'))
-        log_diagnostic("Image embedder initialized")
+        # Initialize image embedder if available
+        image_embedder = None
+        if ImageEmbedder:
+            image_embedder = ImageEmbedder(config.get('models.image_embedding.name'))
+            log_diagnostic("Image embedder initialized")
+        else:
+            log_diagnostic("Image embedder not available")
         
         st.session_state.retriever = Retriever(
             st.session_state.vector_store, 
@@ -118,6 +146,12 @@ def main():
     This system can process documents, images, and audio files to provide intelligent search 
     and question answering capabilities. Upload your files and ask questions!
     """)
+    
+    # Show warning if imports are not available
+    if not IMPORTS_AVAILABLE:
+        st.warning("Some dependencies are not available. The system may have limited functionality.")
+        st.info("Please check that all required packages are installed correctly.")
+        return
     
     # Initialize system if not already done
     if 'initialized' not in st.session_state or not st.session_state.initialized:
@@ -199,6 +233,63 @@ def main():
     with tab2:
         st.header("Chat Interface")
         st.markdown("Ask questions about your indexed content.")
+        
+        # Add search bar at the top of the chat interface
+        with st.container():
+            st.markdown("""
+            <style>
+            .search-container {
+                position: sticky;
+                top: 0;
+                background-color: white;
+                padding: 1rem 0;
+                border-bottom: 1px solid #e0e0e0;
+                z-index: 999;
+                margin-bottom: 1rem;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('<div class="search-container">', unsafe_allow_html=True)
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                search_query = st.text_input("🔍 Quick Search", 
+                                           placeholder="Search through your indexed content...",
+                                           key="chat_search")
+            with col2:
+                search_button = st.button("Search", key="chat_search_button", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Handle search functionality
+            if search_button and search_query:
+                if st.session_state.initialized and st.session_state.retriever:
+                    with st.spinner("Searching..."):
+                        try:
+                            # Use the retriever to search for relevant content
+                            search_results = st.session_state.retriever.retrieve_text(search_query, k=5)
+                            
+                            if search_results:
+                                st.subheader("Search Results")
+                                for i, item in enumerate(search_results, 1):
+                                    source = os.path.basename(item.get('source', 'Unknown'))
+                                    item_type = item.get('type', 'unknown')
+                                    
+                                    if item_type == 'text':
+                                        text = item.get('text', '')[:300] + "..." if len(item.get('text', '')) > 300 else item.get('text', '')
+                                        st.markdown(f"**{i}.** {text} \n\n*Source: {source}*")
+                                    elif item_type == 'image':
+                                        st.markdown(f"**{i}.** Image: {source}")
+                                    elif item_type == 'audio':
+                                        st.markdown(f"**{i}.** Audio: {source}")
+                            else:
+                                st.info("No results found for your query.")
+                        except Exception as e:
+                            st.error(f"Error performing search: {str(e)}")
+                            log_diagnostic(f"Error performing search: {str(e)}")
+                else:
+                    st.warning("System not initialized. Please wait for initialization to complete.")
+            
+            st.markdown("---")
         
         # Display chat history
         if 'chat_history' in st.session_state:
@@ -340,7 +431,10 @@ def main():
             # Show models
             st.subheader("Models")
             st.text(f"Text Embedding: {config.get('models.text_embedding.name')}")
-            st.text(f"Image Embedding: {config.get('models.image_embedding.name')}")
+            if ImageEmbedder:
+                st.text(f"Image Embedding: {config.get('models.image_embedding.name')}")
+            else:
+                st.text("Image Embedding: Not available")
             st.text(f"LLM: {config.get('models.llm.name')}")
             
             # Show LLM status

@@ -43,6 +43,11 @@ class Retriever:
             # Generate query embedding
             query_embedding = self.text_embedder.embed_text(query)
             
+            # Check if embedding is valid
+            if not query_embedding:
+                logger.warning("Text embedder returned empty embedding")
+                return []
+            
             # Search vector store
             indices, distances = self.vector_store.search(query_embedding, k)
             
@@ -51,8 +56,12 @@ class Retriever:
             
             # Add distances to results
             for i, result in enumerate(results):
-                result['distance'] = distances[i]
-                result['relevance_score'] = 1 - (distances[i] / np.max(distances)) if distances else 0
+                result['distance'] = distances[i] if i < len(distances) else 0
+                # Avoid division by zero
+                if distances:
+                    result['relevance_score'] = 1 - (distances[i] / np.max(distances)) if np.max(distances) > 0 else 0
+                else:
+                    result['relevance_score'] = 0
             
             logger.info(f"Retrieved {len(results)} text items for query: {query}")
             return results
@@ -75,6 +84,11 @@ class Retriever:
             # Generate query embedding
             query_embedding = self.text_embedder.embed_text(query)
             
+            # Check if embedding is valid
+            if not query_embedding:
+                logger.warning("Text embedder returned empty embedding")
+                return []
+            
             # Search vector store
             indices, distances = self.vector_store.search(query_embedding, k)
             
@@ -85,7 +99,11 @@ class Retriever:
             # Add distances to results
             for i, result in enumerate(image_results):
                 result['distance'] = distances[i] if i < len(distances) else 0
-                result['relevance_score'] = 1 - (distances[i] / np.max(distances)) if distances else 0
+                # Avoid division by zero
+                if distances:
+                    result['relevance_score'] = 1 - (distances[i] / np.max(distances)) if np.max(distances) > 0 else 0
+                else:
+                    result['relevance_score'] = 0
             
             logger.info(f"Retrieved {len(image_results)} images for query: {query}")
             return image_results
@@ -108,6 +126,11 @@ class Retriever:
             # Generate query embedding
             query_embedding = self.image_embedder.embed_image(image_path)
             
+            # Check if embedding is valid
+            if not query_embedding:
+                logger.warning("Image embedder returned empty embedding")
+                return []
+            
             # Search vector store
             indices, distances = self.vector_store.search(query_embedding, k)
             
@@ -116,8 +139,12 @@ class Retriever:
             
             # Add distances to results
             for i, result in enumerate(results):
-                result['distance'] = distances[i]
-                result['relevance_score'] = 1 - (distances[i] / np.max(distances)) if distances else 0
+                result['distance'] = distances[i] if i < len(distances) else 0
+                # Avoid division by zero
+                if distances:
+                    result['relevance_score'] = 1 - (distances[i] / np.max(distances)) if np.max(distances) > 0 else 0
+                else:
+                    result['relevance_score'] = 0
             
             logger.info(f"Retrieved {len(results)} items for image query: {image_path}")
             return results

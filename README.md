@@ -53,6 +53,53 @@ multimodal_rag/
    python models/setup_models.py
    ```
 
+## Deployment
+
+### Streamlit Cloud Deployment
+
+To deploy on Streamlit Cloud:
+
+1. Fork this repository to your GitHub account
+2. Create a new app on Streamlit Cloud
+3. Connect it to your forked repository
+4. Set the main file path to `streamlit_app.py`
+
+### Handling Dependencies on Streamlit Cloud
+
+Some dependencies may not install correctly on Streamlit Cloud due to system limitations:
+
+1. For CLIP installation issues, you can use the simplified requirements file:
+   ```bash
+   pip install -r requirements_streamlit.txt
+   ```
+
+2. If CLIP is not available, the system will gracefully degrade with limited image processing capabilities.
+
+3. If Whisper is not available, audio processing will be disabled.
+
+### Environment Variables
+
+Set the following environment variables if needed:
+- `MODEL_CACHE_DIR`: Directory for caching models (default: `./models/cache`)
+
+### Deployment Scripts
+
+The project includes deployment helper scripts:
+
+- `setup_deploy.py`: Automated setup script for different deployment environments
+- `deploy.py`: Simplified deployment application with graceful degradation
+- `test_minimal.py`: Minimal test to verify deployment setup
+
+To run the setup script:
+```bash
+python setup_deploy.py
+```
+
+For Streamlit Cloud deployment:
+```bash
+python setup_deploy.py --streamlit-cloud
+```
+
 ## Usage
 
 ### Command Line Interface
