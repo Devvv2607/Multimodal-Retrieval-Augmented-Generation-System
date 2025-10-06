@@ -149,10 +149,6 @@ Thumbs.db
 */env/
 */.env/
 
-# Data files (these can be large and are generated)
-# Removed: data/, multimodal_rag/data/, *.faiss, *.pkl, *.npy, *.npz
-# These files are needed for system operation and should not be ignored
-
 # Log files
 *.log
 
@@ -169,7 +165,7 @@ temp/
 # Streamlit
 .streamlit/
 
-# Model caches (these can be very large)
+# Model caches (these can be large)
 .cache/
 transformers/
 torch/
@@ -219,3 +215,12 @@ build/
 # Vim
 *.swp
 *.swo
+
+# Data files (these are needed for system operation and should not be ignored)
+# Explicitly do NOT ignore these important data files:
+!data/
+!multimodal_rag/data/
+!*.faiss
+!*.pkl
+!*.npy
+!*.npz
