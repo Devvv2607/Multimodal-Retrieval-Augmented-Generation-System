@@ -59,29 +59,21 @@ def check_system_status():
     else:
         st.sidebar.info("ℹ️ Audio processing not available")
 
-def main():
-    """Main deployment application."""
-    st.set_page_config(
-        page_title="Multimodal RAG System",
-        page_icon="🔍",
-        layout="wide"
-    )
-    
-    st.title("🔍 Multimodal Retrieval-Augmented Generation System")
-    
-    # Check system status
-    check_system_status()
-    
-    if not CORE_IMPORTS_AVAILABLE:
-        st.error("The system cannot start due to missing core dependencies.")
-        st.info("Please check the installation instructions in the README.")
-        return
-    
+def show_deployment_info():
+    """Show deployment-specific information."""
+    st.header("Streamlit Cloud Deployment")
     st.markdown("""
-    This system can process documents, images, and audio files to provide intelligent search 
-    and question answering capabilities.
+    This application is configured for deployment on Streamlit Cloud.
     
-    ### Supported Features:
+    ## Deployment Information
+    
+    ### Resource Management
+    - The system is configured to use CPU-only mode to avoid GPU-related issues
+    - Models are cached after first download
+    - Memory usage is optimized for Streamlit Cloud limitations
+    
+    ### Feature Availability
+    The application will automatically adapt to the available packages:
     """)
     
     features = []
@@ -91,18 +83,66 @@ def main():
     
     if IMAGE_EMBEDDER_AVAILABLE:
         features.append("🖼️ **Image Processing**: Process PNG, JPG, and JPEG images")
+    else:
+        features.append("ℹ️ **Image Processing**: Not available in this deployment")
     
     if AUDIO_EMBEDDER_AVAILABLE:
         features.append("🔊 **Audio Processing**: Process MP3 and WAV audio files")
+    else:
+        features.append("ℹ️ **Audio Processing**: Not available in this deployment")
     
     for feature in features:
         st.markdown(feature)
     
     st.markdown("""
-    ### Getting Started:
+    ### File Size Limitations
+    - Streamlit Cloud has file size limits for uploads
+    - For best performance, use smaller files (< 10MB each)
+    
+    ### Model Download
+    - Models will be downloaded on first use
+    - This may take a few minutes
+    - Subsequent runs will be faster due to caching
+    
+    ### Troubleshooting
+    If you encounter issues:
+    1. Check the Streamlit Cloud build logs
+    2. Verify all requirements are correctly specified
+    3. Ensure your repository structure matches the expected format
+    """)
+
+def main():
+    """Main deployment application."""
+    st.set_page_config(
+        page_title="Multimodal RAG System - Streamlit Cloud",
+        page_icon="🔍",
+        layout="wide"
+    )
+    
+    st.title("🔍 Multimodal Retrieval-Augmented Generation System")
+    
+    # Check system status
+    check_system_status()
+    
+    # Show deployment information
+    show_deployment_info()
+    
+    if not CORE_IMPORTS_AVAILABLE:
+        st.error("The system cannot start due to missing core dependencies.")
+        st.info("Please check your requirements file and Streamlit Cloud setup.")
+        st.info("Refer to STREAMLIT_CLOUD_DEPLOYMENT.md for detailed instructions.")
+        return
+    
+    st.markdown("""
+    ## Getting Started:
     1. Go to the **Ingest** tab to upload and process your files
     2. Use the **Chat** tab to ask questions about your content
     3. Check the **Status** tab to see system information
+    
+    ### For Streamlit Cloud Users:
+    - This application is optimized for Streamlit Cloud deployment
+    - Features will automatically adapt to available packages
+    - Refer to the documentation for detailed deployment instructions
     """)
 
 if __name__ == "__main__":

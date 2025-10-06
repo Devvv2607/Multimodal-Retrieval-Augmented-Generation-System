@@ -21,7 +21,7 @@ models:
   llm:
     name: "microsoft/phi-3-mini-4k-instruct"
     max_tokens: 2048
-    use_gpu: true
+    use_gpu: false
     gpu_memory_utilization: 0.9
 
 # Vector database configuration
@@ -50,5 +50,5 @@ retrieval:
 
 # Performance settings
 performance:
-  use_gpu: true
+  use_gpu: false
   batch_size: 32
