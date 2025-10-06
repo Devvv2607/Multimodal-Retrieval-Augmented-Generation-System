@@ -150,12 +150,8 @@ Thumbs.db
 */.env/
 
 # Data files (these can be large and are generated)
-data/
-multimodal_rag/data/
-*.faiss
-*.pkl
-*.npy
-*.npz
+# Removed: data/, multimodal_rag/data/, *.faiss, *.pkl, *.npy, *.npz
+# These files are needed for system operation and should not be ignored
 
 # Log files
 *.log

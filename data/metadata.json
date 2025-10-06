@@ -1,0 +1,41 @@
+[
+  {
+    "text": "\n    The field of artificial intelligence has seen tremendous growth in recent years. \n    Machine learning algorithms, particularly deep learning neural networks, have \n    achieved remarkable success in various domains including computer vision, \n    natural language processing, and speech recognition.\n    \n    One of the most significant breakthroughs has been the development of \n    transformer architectures, which have revolutionized natural language \n    understanding tasks. Models like BERT, GPT, and",
+    "source": "./sample_data\\ai_overview.txt",
+    "chunk": 0,
+    "type": "text"
+  },
+  {
+    "text": "   understanding tasks. Models like BERT, GPT, and more recently Phi-3 have \n    demonstrated unprecedented capabilities in generating human-like text and \n    understanding context.\n    \n    In the realm of computer vision, convolutional neural networks (CNNs) have \n    become the standard approach for image classification, object detection, \n    and segmentation tasks. The integration of vision and language models has \n    led to multimodal systems that can understand both textual and visual \n    informat",
+    "source": "./sample_data\\ai_overview.txt",
+    "chunk": 1,
+    "type": "text"
+  },
+  {
+    "text": "n understand both textual and visual \n    information simultaneously.\n    ",
+    "source": "./sample_data\\ai_overview.txt",
+    "chunk": 2,
+    "type": "text"
+  },
+  {
+    "text": "Machine Learning Fundamentals",
+    "source": "./sample_data\\ml_fundamentals.docx",
+    "page": 0,
+    "paragraph": 0,
+    "type": "text"
+  },
+  {
+    "text": "Machine learning is a subset of artificial intelligence that focuses on developing algorithms that can learn from and make predictions or decisions based on data.",
+    "source": "./sample_data\\ml_fundamentals.docx",
+    "page": 0,
+    "paragraph": 1,
+    "type": "text"
+  },
+  {
+    "text": "The three main types of machine learning are:\n1. Supervised Learning - Learning with labeled data\n2. Unsupervised Learning - Finding patterns in unlabeled data\n3. Reinforcement Learning - Learning through interaction with an environment",
+    "source": "./sample_data\\ml_fundamentals.docx",
+    "page": 0,
+    "paragraph": 2,
+    "type": "text"
+  }
+]
