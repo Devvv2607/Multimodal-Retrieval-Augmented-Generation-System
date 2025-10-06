@@ -37,5 +37,25 @@
     "page": 0,
     "paragraph": 2,
     "type": "text"
+  },
+  {
+    "text": "Artificial Intelligence and Machine Learning\n Overview\n \nIntroduction to Machine Learning\nMachine Learning (ML) is a subset of Artificial Intelligence that enables systems to learn and\nimprove from experience without being explicitly programmed. It involves designing algorithms that\ncan identify patterns in data and make predictions or decisions. ML is the driving force behind many\nmodern applications such as recommendation systems, speech recognition, self-driving cars, and\nhealthcare analytics.\nTypes of Machine Learning\nMachine Learning can broadly be divided into three categories: Supervised Learning, Unsupervised\nLearning, and Reinforcement Learning. Each of these paradigms has its own methods,\napplications, and challenges.\nSupervised Learning\nSupervised Learning is the most common type of ML where the model is trained on labeled data. It\nlearns to map input features to the correct output. Applications include spam detection, medical\ndiagnosis, and stock price prediction. Popular algorithms are Linear Regression, Logistic\nRegression, Decision Trees, and Neural Networks.\nUnsupervised Learning\nIn Unsupervised Learning, the model works with unlabeled data to discover hidden patterns or\ngroupings. It is useful for clustering, anomaly detection, and market segmentation. Algorithms such\nas K-Means, Hierarchical Clustering, and PCA are commonly used.\nReinforcement Learning\nReinforcement Learning is based on the concept of agents that learn by interacting with an\nenvironment. The agent takes actions and receives rewards or penalties, gradually learning an\noptimal strategy. It is widely applied in robotics, game playing (e.g., AlphaGo), and resource\noptimization.\nDeep Learning\nDeep Learning is a subfield of ML that uses artificial neural networks with multiple layers. It has\nachieved remarkable success in image recognition, natural language processing, and speech\nsynthesis. Convolutional Neural Networks (CNNs) and Recurrent Neural Networks (RNNs) are\nwidely used architectures.\nApplications of Machine Learning",
+    "source": "C:\\Users\\Dev\\AppData\\Local\\Temp\\tmpig7mt04x\\AI_ML_Overview.pdf",
+    "page": 0,
+    "paragraph": 0,
+    "type": "text"
+  },
+  {
+    "text": "Machine Learning has transformed industries across the globe. In healthcare, it assists in disease\nprediction and drug discovery. In finance, it enables fraud detection and algorithmic trading. In\nretail, ML powers personalized recommendations and demand forecasting. Future applications\ninclude autonomous vehicles, smart cities, and advanced conversational AI systems.\nConclusion\nMachine Learning is a rapidly evolving field with immense potential. As algorithms become more\nadvanced and data availability increases, ML will continue to revolutionize industries and improve\ndaily life. However, challenges such as data privacy, bias, and interpretability must be addressed to\nensure ethical and responsible use of this technology.",
+    "source": "C:\\Users\\Dev\\AppData\\Local\\Temp\\tmpig7mt04x\\AI_ML_Overview.pdf",
+    "page": 1,
+    "paragraph": 0,
+    "type": "text"
+  },
+  {
+    "text": "Artificial Intelligence Basics\n\nArtificial intelligence (AI) is a branch of computer science that aims to create software or machines that exhibit human-like intelligence.\n\nTypes of AI:\n1. Narrow AI - Designed for specific tasks\n2. General AI - Hypothetical AI with human-level intelligence\n3. Superintelligence - AI that surpasses human intelligence\n\nMachine Learning is a subset of AI that enables computers to learn and improve from experience.",
+    "source": "C:\\Users\\Dev\\AppData\\Local\\Temp\\tmpig7mt04x\\Artificial Intelligence Basics.txt",
+    "chunk": 0,
+    "type": "text"
   }
 ]
